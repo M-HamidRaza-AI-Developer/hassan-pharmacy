@@ -157,24 +157,29 @@ async function renderTabProducts(){
   host.innerHTML = `
     <div class="card-box">
       <h3>Add New Medicine</h3>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 2fr auto;gap:10px;align-items:end;margin-bottom:20px">
         <div class="form-row" style="margin:0"><label>Name</label><input id="newProdName" placeholder="Medicine name"></div>
         <div class="form-row" style="margin:0"><label>Category</label>
           <select id="newProdCat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select>
         </div>
         <div class="form-row" style="margin:0"><label>Price (Rs.)</label><input id="newProdPrice" type="number" placeholder="0"></div>
         <div class="form-row" style="margin:0"><label>Discount %</label><input id="newProdDisc" type="number" placeholder="0"></div>
+        <div class="form-row" style="margin:0"><label>Image URL</label><input id="newProdImage" placeholder="https://... (optional)"></div>
         <button class="mini-btn mini-save" style="height:38px" onclick="addProduct()">+ Add</button>
       </div>
       <h3>All Medicines (${products.length})</h3>
       <table class="admin-table">
-        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Disc %</th><th>Stock</th><th></th></tr></thead>
+        <thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th><th>Disc %</th><th>Image URL</th><th>Stock</th><th></th></tr></thead>
         <tbody id="adminProdTable">${products.map(prodRowHtml).join('')}</tbody>
       </table>
     </div>`;
 }
 function prodRowHtml(p){
+  const thumbHtml = p.image
+    ? `<img src="${escapeHtml(p.image)}" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f7faf8" onerror="this.style.display='none'">`
+    : `<span style="font-size:20px">${ICONS[p.category]||'💊'}</span>`;
   return `<tr>
+      <td>${thumbHtml}</td>
       <td><input value="${escapeHtml(p.name)}" onchange="editProduct('${p.id}','name',this.value)"></td>
       <td>
         <select onchange="editProduct('${p.id}','category',this.value)">
@@ -183,9 +188,14 @@ function prodRowHtml(p){
       </td>
       <td><input type="number" value="${p.price}" onchange="editProduct('${p.id}','price',this.value)"></td>
       <td><input type="number" value="${p.discount}" onchange="editProduct('${p.id}','discount',this.value)"></td>
+      <td><input value="${escapeHtml(p.image||'')}" placeholder="https://..." onchange="editProductImage('${p.id}',this.value)"></td>
       <td><button class="toggle-stock ${p.stock?'in-stock':'out-stock'}" onclick="toggleStock('${p.id}',${p.stock})">${p.stock?'In Stock':'Out of Stock'}</button></td>
       <td><button class="mini-btn mini-del" onclick="deleteProduct('${p.id}')">Delete</button></td>
     </tr>`;
+}
+async function editProductImage(id, value){
+  try{ await apiSend('PUT', '/products/'+id, {image: value}); renderTabProducts(); }
+  catch(e){ alert('Could not update: '+e.message); }
 }
 async function editProduct(id, field, value){
   const body = {}; body[field] = (field==='price'||field==='discount') ? Number(value) : value;
@@ -205,8 +215,9 @@ async function addProduct(){
   const category = document.getElementById('newProdCat').value;
   const price = Number(document.getElementById('newProdPrice').value) || 0;
   const discount = Number(document.getElementById('newProdDisc').value) || 0;
+  const image = document.getElementById('newProdImage').value.trim();
   if(!name){ alert('Enter a medicine name.'); return; }
-  try{ await apiSend('POST', '/products', {name, category, price, discount, stock:true, desc:''}); renderTabProducts(); }
+  try{ await apiSend('POST', '/products', {name, category, price, discount, stock:true, desc:'', image}); renderTabProducts(); }
   catch(e){ alert('Could not add product: '+e.message); }
 }
 

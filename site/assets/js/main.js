@@ -1,6 +1,7 @@
 /* ============ Hassan Pharmacy — shared logic (storefront, backend-connected) ============ */
 
-const API_BASE = 'https://hassan-pharmacy.onrender.com/api';
+const API_BASE = 'https://hassan-pharmacy-backend.onrender.com/api'; // <-- apna asal Render URL yahan daalein
+
 const CATS = ["Pain Relief","Cold and Flu","Diabetes Care","Digestive Health","First Aid","Skin Care","Child and Baby Care","Heart Health","Eye and Ear Care","Respiratory Health"];
 const ICONS = {"Pain Relief":"💊","Cold and Flu":"🤧","Diabetes Care":"🩸","Digestive Health":"🌿","First Aid":"🩹","Skin Care":"🧴","Child and Baby Care":"🍼","Heart Health":"❤️","Eye and Ear Care":"👁️","Respiratory Health":"😷"};
 const DOCTORS = [
@@ -169,10 +170,13 @@ function priceHtml(p){
   return `<div class="prod-price-row"><span class="prod-price">Rs. ${final}</span>${p.discount>0?`<span class="prod-old">Rs. ${p.price}</span>`:''}</div>`;
 }
 function productCard(p){
+  const thumb = p.image
+    ? `<div class="prod-thumb" style="background:#fff;overflow:hidden;padding:0"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML='${ICONS[p.category]||'💊'}'"></div>`
+    : `<div class="prod-thumb">${ICONS[p.category]||'💊'}</div>`;
   return `<div class="prod-card" onclick="openMedicine('${p.id}')">
     ${p.discount>0?`<span class="disc-badge">${p.discount}% OFF</span>`:''}
     <span class="stock-badge ${p.stock?'in-stock':'out-stock'}">${p.stock?'In Stock':'Out of Stock'}</span>
-    <div class="prod-thumb">${ICONS[p.category]||'💊'}</div>
+    ${thumb}
     <div class="prod-name">${escapeHtml(p.name)}</div>
     <div class="prod-cat">${escapeHtml(p.category)}</div>
     ${priceHtml(p)}
@@ -208,8 +212,11 @@ function openMedicine(id){
   const p = _productCache.find(x=>x.id===id);
   if(!p) return;
   const final = p.discount>0 ? Math.round(p.price*(1-p.discount/100)) : p.price;
+  const iconHtml = p.image
+    ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.textContent='${ICONS[p.category]||'💊'}'">`
+    : (ICONS[p.category]||'💊');
   document.getElementById('medModalBody').innerHTML = `
-    <div class="modal-icon">${ICONS[p.category]||'💊'}</div>
+    <div class="modal-icon" style="overflow:hidden;background:#fff">${iconHtml}</div>
     <span class="stock-badge ${p.stock?'in-stock':'out-stock'}" style="position:static;display:inline-block;margin-bottom:8px">${p.stock?'In Stock':'Out of Stock'}</span>
     <h2 style="margin-bottom:4px">${escapeHtml(p.name)}</h2>
     <div class="prod-cat" style="margin-bottom:10px">${escapeHtml(p.category)}</div>

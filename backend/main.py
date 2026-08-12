@@ -51,21 +51,21 @@ CATEGORIES = ["Pain Relief", "Cold and Flu", "Diabetes Care", "Digestive Health"
               "Skin Care", "Child and Baby Care", "Heart Health", "Eye and Ear Care", "Respiratory Health"]
 
 DEFAULT_PRODUCTS = [
-    ("p1", "Panadol Extra", "Pain Relief", 120, 0, 1, "Fast-acting relief for headache, fever and body pain."),
-    ("p2", "Augmentin 625mg", "Cold and Flu", 450, 10, 1, "Broad-spectrum antibiotic for bacterial infections."),
-    ("p3", "Disprin", "Pain Relief", 60, 0, 1, "Soluble aspirin tablets for quick pain relief."),
-    ("p4", "Brufen 400mg", "Pain Relief", 150, 0, 0, "Ibuprofen for pain, inflammation and fever."),
-    ("p5", "Calpol Syrup", "Child and Baby Care", 180, 5, 1, "Gentle fever & pain relief syrup for children."),
-    ("p6", "Risek 20mg", "Digestive Health", 320, 0, 1, "Reduces stomach acid, treats ulcers & reflux."),
-    ("p7", "Ponstan Forte", "Pain Relief", 140, 0, 1, "Effective relief from moderate to severe pain."),
-    ("p8", "Flagyl 400mg", "Digestive Health", 90, 0, 1, "Antibiotic for intestinal & stomach infections."),
-    ("p9", "Glucometer Strips", "Diabetes Care", 1200, 15, 1, "Accurate blood glucose test strips, box of 50."),
-    ("p10", "Surgical Gloves (Box)", "First Aid", 199, 0, 1, "Latex examination gloves, box of 100."),
-    ("p11", "N95 Mask (Pack of 5)", "Respiratory Health", 89, 0, 1, "High filtration protective face masks."),
-    ("p12", "Hand Sanitizer 250ml", "Skin Care", 399, 0, 1, "70% alcohol-based hand sanitizer gel."),
-    ("p13", "Vicks Vaporub", "Cold and Flu", 210, 0, 1, "Topical rub for cough, cold & congestion relief."),
-    ("p14", "Centrum Multivitamin", "Heart Health", 850, 10, 1, "Daily multivitamin for heart & overall wellness."),
-    ("p15", "Systane Eye Drops", "Eye and Ear Care", 320, 0, 1, "Lubricating drops for dry, irritated eyes."),
+    ("p1", "Panadol Extra", "Pain Relief", 120, 0, 1, "Fast-acting relief for headache, fever and body pain.", ""),
+    ("p2", "Augmentin 625mg", "Cold and Flu", 450, 10, 1, "Broad-spectrum antibiotic for bacterial infections.", ""),
+    ("p3", "Disprin", "Pain Relief", 60, 0, 1, "Soluble aspirin tablets for quick pain relief.", ""),
+    ("p4", "Brufen 400mg", "Pain Relief", 150, 0, 0, "Ibuprofen for pain, inflammation and fever.", ""),
+    ("p5", "Calpol Syrup", "Child and Baby Care", 180, 5, 1, "Gentle fever & pain relief syrup for children.", ""),
+    ("p6", "Risek 20mg", "Digestive Health", 320, 0, 1, "Reduces stomach acid, treats ulcers & reflux.", ""),
+    ("p7", "Ponstan Forte", "Pain Relief", 140, 0, 1, "Effective relief from moderate to severe pain.", ""),
+    ("p8", "Flagyl 400mg", "Digestive Health", 90, 0, 1, "Antibiotic for intestinal & stomach infections.", ""),
+    ("p9", "Glucometer Strips", "Diabetes Care", 1200, 15, 1, "Accurate blood glucose test strips, box of 50.", ""),
+    ("p10", "Surgical Gloves (Box)", "First Aid", 199, 0, 1, "Latex examination gloves, box of 100.", ""),
+    ("p11", "N95 Mask (Pack of 5)", "Respiratory Health", 89, 0, 1, "High filtration protective face masks.", ""),
+    ("p12", "Hand Sanitizer 250ml", "Skin Care", 399, 0, 1, "70% alcohol-based hand sanitizer gel.", ""),
+    ("p13", "Vicks Vaporub", "Cold and Flu", 210, 0, 1, "Topical rub for cough, cold & congestion relief.", ""),
+    ("p14", "Centrum Multivitamin", "Heart Health", 850, 10, 1, "Daily multivitamin for heart & overall wellness.", ""),
+    ("p15", "Systane Eye Drops", "Eye and Ear Care", 320, 0, 1, "Lubricating drops for dry, irritated eyes.", ""),
 ]
 DEFAULT_ANNOUNCEMENTS = [
     "🎉 Flat 25% OFF on Diabetes Care products this week!",
@@ -90,7 +90,7 @@ def init_db():
     with get_db() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS products(
             id TEXT PRIMARY KEY, name TEXT, category TEXT, price INTEGER,
-            discount INTEGER, stock INTEGER, desc TEXT)""")
+            discount INTEGER, stock INTEGER, desc TEXT, image TEXT)""")
         db.execute("""CREATE TABLE IF NOT EXISTS announcements(
             id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT)""")
         db.execute("""CREATE TABLE IF NOT EXISTS news(
@@ -104,8 +104,14 @@ def init_db():
             id TEXT PRIMARY KEY, customer TEXT, phone TEXT, items TEXT,
             total INTEGER, status TEXT, date TEXT)""")
 
+        # migration: add 'image' column to products table if it doesn't exist yet
+        # (needed for databases created before the photo feature was added)
+        cols = [r["name"] for r in db.execute("PRAGMA table_info(products)").fetchall()]
+        if "image" not in cols:
+            db.execute("ALTER TABLE products ADD COLUMN image TEXT DEFAULT ''")
+
         if db.execute("SELECT COUNT(*) c FROM products").fetchone()["c"] == 0:
-            db.executemany("INSERT INTO products VALUES (?,?,?,?,?,?,?)", DEFAULT_PRODUCTS)
+            db.executemany("INSERT INTO products VALUES (?,?,?,?,?,?,?,?)", DEFAULT_PRODUCTS)
         if db.execute("SELECT COUNT(*) c FROM announcements").fetchone()["c"] == 0:
             db.executemany("INSERT INTO announcements(text) VALUES (?)", [(a,) for a in DEFAULT_ANNOUNCEMENTS])
         if db.execute("SELECT COUNT(*) c FROM news").fetchone()["c"] == 0:
@@ -126,6 +132,7 @@ class ProductIn(BaseModel):
     discount: int = 0
     stock: bool = True
     desc: str = ""
+    image: str = ""
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -134,6 +141,7 @@ class ProductUpdate(BaseModel):
     discount: Optional[int] = None
     stock: Optional[bool] = None
     desc: Optional[str] = None
+    image: Optional[str] = None
 
 class TextIn(BaseModel):
     text: str
@@ -172,7 +180,8 @@ class StatusIn(BaseModel):
 
 def product_row_to_dict(r):
     return {"id": r["id"], "name": r["name"], "category": r["category"], "price": r["price"],
-            "discount": r["discount"], "stock": bool(r["stock"]), "desc": r["desc"]}
+            "discount": r["discount"], "stock": bool(r["stock"]), "desc": r["desc"],
+            "image": r["image"] if "image" in r.keys() else ""}
 
 def order_row_to_dict(r):
     return {"id": r["id"], "customer": r["customer"], "phone": r["phone"],
@@ -191,8 +200,8 @@ def list_products():
 def create_product(p: ProductIn):
     pid = "p" + str(int(time.time() * 1000))
     with get_db() as db:
-        db.execute("INSERT INTO products VALUES (?,?,?,?,?,?,?)",
-                   (pid, p.name, p.category, p.price, p.discount, int(p.stock), p.desc))
+        db.execute("INSERT INTO products VALUES (?,?,?,?,?,?,?,?)",
+                   (pid, p.name, p.category, p.price, p.discount, int(p.stock), p.desc, p.image))
     return {"id": pid, **p.dict()}
 
 @app.put("/api/products/{pid}")
@@ -204,9 +213,9 @@ def update_product(pid: str, p: ProductUpdate):
         updated = product_row_to_dict(row)
         data = p.dict(exclude_unset=True)
         updated.update(data)
-        db.execute("UPDATE products SET name=?, category=?, price=?, discount=?, stock=?, desc=? WHERE id=?",
+        db.execute("UPDATE products SET name=?, category=?, price=?, discount=?, stock=?, desc=?, image=? WHERE id=?",
                    (updated["name"], updated["category"], updated["price"], updated["discount"],
-                    int(updated["stock"]), updated["desc"], pid))
+                    int(updated["stock"]), updated["desc"], updated["image"], pid))
     return updated
 
 @app.delete("/api/products/{pid}")
