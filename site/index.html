@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="splash-shell">
+    <div>
+      <div class="splash-logo">✚</div>
+      <h1>Hassan Pharmacy</h1>
+      <p>Your Prescription for Affordable Health Solutions</p>
+      <div class="splash-loader"><span></span></div>
+      <a href="login.html" class="btn-primary" id="enterBtn">Enter Store →</a>
+    </div>
+  </div>
+  <script src="assets/js/main.js"></script>
+  <script>
+    // If already logged in, skip straight to the store; otherwise go to login after a short splash.
+    setTimeout(()=>{
+      const user = getUser();
+      window.location.href = user ? 'home.html' : 'login.html';
+    }, 2200);
+  </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Cart — Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<main>
+  <div class="container">
+    <section class="section">
+      <div class="section-head"><h2>Your Cart</h2></div>
+      <div class="cart-layout">
+        <div id="cartItems"></div>
+        <div class="cart-summary">
+          <div class="row"><span>Subtotal</span><span id="cartSubtotal">Rs. 0</span></div>
+          <div class="row"><span>Delivery</span><span id="cartDelivery">Rs. 0</span></div>
+          <div class="row total"><span>Total</span><span id="cartTotal">Rs. 0</span></div>
+          <button class="btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="checkout()">Place Order</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/js/main.js"></script>
+<script>
+  renderHeader('cart');
+  renderFooter();
+
+  async function renderCartPage(){
+    const cart = getCart();
+    const wrap = document.getElementById('cartItems');
+    wrap.innerHTML = '<p style="color:var(--gray)">Loading…</p>';
+    const products = await getProducts();
+    if(!cart.length){
+      wrap.innerHTML = '<p style="color:var(--gray)">Your cart is empty. <a href="medicines.html" style="color:var(--green-dark);font-weight:700">Browse medicines →</a></p>';
+    } else {
+      wrap.innerHTML = cart.map(c=>{
+        const p = products.find(x=>x.id===c.id);
+        if(!p) return '';
+        const final = p.discount>0 ? Math.round(p.price*(1-p.discount/100)) : p.price;
+        return `<div class="cart-row">
+          <div class="prod-thumb">${ICONS[p.category]||'💊'}</div>
+          <div class="info"><div class="prod-name">${escapeHtml(p.name)}</div><div class="prod-cat">Rs. ${final} each</div></div>
+          <div class="qty-ctrl"><button onclick="changeQty('${p.id}',-1)">−</button><span>${c.qty}</span><button onclick="changeQty('${p.id}',1)">+</button></div>
+          <div style="font-weight:800;min-width:70px;text-align:right">Rs. ${final*c.qty}</div>
+          <a class="remove-link" onclick="removeFromCart('${p.id}')">Remove</a>
+        </div>`;
+      }).join('');
+    }
+    const subtotal = cart.reduce((s,c)=>{
+      const p = products.find(x=>x.id===c.id);
+      if(!p) return s;
+      const final = p.discount>0 ? Math.round(p.price*(1-p.discount/100)) : p.price;
+      return s + final*c.qty;
+    },0);
+    const delivery = subtotal>0 ? (subtotal>=1000?0:150) : 0;
+    document.getElementById('cartSubtotal').textContent = 'Rs. '+subtotal;
+    document.getElementById('cartDelivery').textContent = delivery===0?'Free':'Rs. '+delivery;
+    document.getElementById('cartTotal').textContent = 'Rs. '+(subtotal+delivery);
+  }
+  async function changeQty(id, delta){
+    let cart = getCart();
+    const item = cart.find(c=>c.id===id);
+    if(!item) return;
+    item.qty += delta;
+    if(item.qty<=0) cart = cart.filter(c=>c.id!==id);
+    saveCart(cart);
+    await renderHeader('cart'); renderCartPage();
+  }
+  async function removeFromCart(id){
+    saveCart(getCart().filter(c=>c.id!==id));
+    await renderHeader('cart'); renderCartPage();
+  }
+  async function checkout(){
+    const cart = getCart();
+    if(!cart.length){ alert('Your cart is empty.'); return; }
+    const user = getUser();
+    if(!user){ alert('Please login to place an order.'); window.location.href='login.html'; return; }
+    const products = await getProducts();
+    const subtotal = cart.reduce((s,c)=>{
+      const p = products.find(x=>x.id===c.id);
+      const final = p.discount>0 ? Math.round(p.price*(1-p.discount/100)) : p.price;
+      return s + final*c.qty;
+    },0);
+    const orderPayload = {
+      customer:user.name, phone:user.phone,
+      items: cart.map(c=>({id:c.id, qty:c.qty})),
+      total: subtotal + (subtotal>=1000?0:150),
+    };
+    try{
+      const order = await createOrderApi(orderPayload);
+      saveCart([]);
+      alert('✅ Order placed! Order ID: '+order.id);
+      window.location.href = 'account.html';
+    }catch(e){
+      alert('❌ Could not place order: '+e.message);
+    }
+  }
+  renderCartPage();
+</script>
+</body>
+</html>

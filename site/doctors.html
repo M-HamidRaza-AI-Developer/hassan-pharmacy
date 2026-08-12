@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctor Consultation — Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<main>
+  <div class="container">
+    <section class="section">
+      <div class="section-head"><h2>Telemedicine — Doctor Consultation</h2></div>
+      <div class="doc-grid" id="docGrid"></div>
+    </section>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/js/main.js"></script>
+<script>
+  renderHeader('doctors');
+  renderFooter();
+  document.getElementById('docGrid').innerHTML = DOCTORS.map(d=>`
+    <div class="doc-card">
+      <div class="doc-avatar">🩺</div>
+      <div class="prod-name">${d.name}</div>
+      <div class="prod-cat" style="margin-bottom:8px">${d.spec}</div>
+      <div style="font-size:12.5px;color:var(--gray);margin-bottom:4px">Fee: <b>${d.fee}</b></div>
+      <div style="font-size:12.5px;color:var(--gray);margin-bottom:12px">${d.time}</div>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="alert('✅ Appointment request sent to ${d.name}. They will confirm shortly.')">Book Appointment</button>
+    </div>`).join('');
+</script>
+</body>
+</html>

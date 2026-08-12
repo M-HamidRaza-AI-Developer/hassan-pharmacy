@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<main>
+  <div class="container">
+    <div id="guestGate" class="hidden">
+      <div class="auth-card" style="margin:50px auto">
+        <h2>Please login</h2>
+        <p class="sub">You need an account to view your dashboard.</p>
+        <a href="login.html" class="btn-primary" style="width:100%;justify-content:center">Go to Login →</a>
+      </div>
+    </div>
+
+    <div id="dashContent" class="hidden">
+      <div class="dash-wrap">
+        <div class="dash-top">
+          <h2 id="dashWelcome">Welcome!</h2>
+          <button class="btn-outline" onclick="doLogout()">Log Out</button>
+        </div>
+        <div class="dash-cards">
+          <div class="dcard d-mint"><b id="dcTotal">Rs. 0</b><span>Total Spent</span></div>
+          <div class="dcard d-peach"><b id="dcOrders">0</b><span>Total Orders</span></div>
+          <div class="dcard d-lav"><b id="dcPending">0</b><span>In Progress</span></div>
+          <div class="dcard d-pink"><b id="dcDelivered">0</b><span>Delivered</span></div>
+        </div>
+        <div class="dash-panels">
+          <div class="panel">
+            <h3 style="margin-bottom:12px;font-size:15px">Recent Orders</h3>
+            <div id="dashOrdersList"></div>
+          </div>
+          <div class="panel">
+            <h3 style="margin-bottom:12px;font-size:15px">Profile</h3>
+            <div class="profile-line"><span>Name</span><b id="pfName"></b></div>
+            <div class="profile-line"><span>Phone</span><b id="pfPhone"></b></div>
+            <div class="profile-line"><span>Address</span><b>Rahwali, near DC Colony, Gujranwala</b></div>
+            <div class="profile-line"><span>Support</span><b>+92 325 8604103</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/js/main.js"></script>
+<script>
+(async function(){
+  renderHeader('account');
+  renderFooter();
+
+  const user = getUser();
+  if(!user){
+    document.getElementById('guestGate').classList.remove('hidden');
+  } else {
+    document.getElementById('dashContent').classList.remove('hidden');
+    document.getElementById('dashWelcome').textContent = 'Welcome, '+user.name+'!';
+    document.getElementById('pfName').textContent = user.name;
+    document.getElementById('pfPhone').textContent = user.phone || '—';
+
+    const orders = await getOrders(user.phone);
+    const total = orders.reduce((s,o)=>s+o.total,0);
+    document.getElementById('dcTotal').textContent = 'Rs. '+total;
+    document.getElementById('dcOrders').textContent = orders.length;
+    document.getElementById('dcPending').textContent = orders.filter(o=>o.status!=='Delivered' && o.status!=='Cancelled').length;
+    document.getElementById('dcDelivered').textContent = orders.filter(o=>o.status==='Delivered').length;
+
+    const statusClass = s => s==='Delivered'?'st-delivered':s==='In Transit'?'st-transit':s==='Cancelled'?'st-cancelled':'st-pending';
+    document.getElementById('dashOrdersList').innerHTML = orders.length ? orders.map(o=>`
+      <div class="order-row">
+        <span>${o.id} · ${o.date}</span>
+        <span>Rs. ${o.total}</span>
+        <span class="status-pill ${statusClass(o.status)}">${o.status}</span>
+      </div>`).join('') : '<p style="color:var(--gray);font-size:13px">No orders yet — go place one!</p>';
+  }
+})();
+</script>
+</body>
+</html>

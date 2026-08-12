@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Medicines — Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<main>
+  <div class="container">
+    <section class="section">
+      <div class="section-head"><h2>All Medicines</h2><span style="font-size:12.5px;color:var(--gray)" id="countLbl"></span></div>
+      <div class="page-nav" style="padding:0 0 16px" id="filterBar"></div>
+      <div class="prod-grid" id="allGrid"></div>
+    </section>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/js/main.js"></script>
+<script>
+  renderHeader('medicines');
+  renderFooter();
+
+  function getParam(name){
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+  let activeCat = getParam('cat') || 'All';
+
+  function renderFilters(){
+    const bar = document.getElementById('filterBar');
+    bar.innerHTML = ['All',...CATS].map(c=>`<a class="${activeCat===c?'active':''}" onclick="setCat('${c}')">${c}</a>`).join('');
+  }
+  function setCat(c){ activeCat = c; renderFilters(); renderGrid(); }
+  let _allProducts = [];
+  async function renderGrid(){
+    document.getElementById('allGrid').innerHTML = '<p style="color:var(--gray)">Loading…</p>';
+    _allProducts = await getProducts();
+    const list = activeCat==='All' ? _allProducts : _allProducts.filter(p=>p.category===activeCat);
+    document.getElementById('countLbl').textContent = list.length + ' item(s)';
+    document.getElementById('allGrid').innerHTML = list.length ? list.map(productCard).join('') : '<p style="color:var(--gray)">No medicines in this category yet.</p>';
+  }
+  renderFilters();
+  renderGrid();
+</script>
+</body>
+</html>

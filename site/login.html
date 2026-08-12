@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Hassan Pharmacy</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="logo" style="margin-bottom:18px"><div class="mark">✚</div> Hassan Pharmacy</div>
+      <div class="auth-tabs">
+        <button id="tabLoginBtn" class="active" onclick="switchTab('login')">Login</button>
+        <button id="tabRegisterBtn" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <div id="errBox" class="err-msg hidden"></div>
+
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <h2 style="font-size:18px;margin-bottom:2px">Welcome back</h2>
+        <p class="sub">Login to manage your orders &amp; profile.</p>
+        <div class="form-row"><label>Phone or Email</label><input id="loginId" placeholder="03XX-XXXXXXX or email" required></div>
+        <div class="form-row"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" required></div>
+        <button class="btn-primary" style="width:100%;justify-content:center" type="submit">Login →</button>
+      </form>
+
+      <form id="registerForm" class="hidden" onsubmit="return handleRegister(event)">
+        <h2 style="font-size:18px;margin-bottom:2px">Create your account</h2>
+        <p class="sub">Register to start ordering medicines.</p>
+        <div class="form-row"><label>Full Name</label><input id="regName" placeholder="e.g. Ayesha Khan" required></div>
+        <div class="form-row"><label>Phone</label><input id="regPhone" placeholder="03XX-XXXXXXX" required></div>
+        <div class="form-row"><label>Email (optional)</label><input id="regEmail" placeholder="you@example.com"></div>
+        <div class="form-row"><label>Password</label><input id="regPass" type="password" placeholder="••••••••" required></div>
+        <button class="btn-primary" style="width:100%;justify-content:center" type="submit">Register →</button>
+      </form>
+
+      <div class="auth-link">or <b onclick="continueGuest()">continue as guest</b></div>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    function switchTab(tab){
+      document.getElementById('loginForm').classList.toggle('hidden', tab!=='login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab!=='register');
+      document.getElementById('tabLoginBtn').classList.toggle('active', tab==='login');
+      document.getElementById('tabRegisterBtn').classList.toggle('active', tab==='register');
+      hideErr();
+    }
+    function showErr(msg){ const b=document.getElementById('errBox'); b.textContent=msg; b.classList.remove('hidden'); }
+    function hideErr(){ document.getElementById('errBox').classList.add('hidden'); }
+
+    async function handleLogin(e){
+      e.preventDefault();
+      const id = document.getElementById('loginId').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      try{
+        const user = await loginUserApi(id, pass);
+        saveUser(user);
+        window.location.href = 'home.html';
+      }catch(err){
+        showErr(err.message || 'No matching account found. Please check your details or register.');
+      }
+      return false;
+    }
+
+    async function handleRegister(e){
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pass = document.getElementById('regPass').value;
+      if(!name || !phone || !pass){ showErr('Please fill all required fields.'); return false; }
+      try{
+        const user = await registerUserApi({name, phone, email, password:pass});
+        saveUser(user);
+        window.location.href = 'home.html';
+      }catch(err){
+        showErr(err.message || 'Could not register. Please try again.');
+      }
+      return false;
+    }
+
+    function continueGuest(){ window.location.href = 'home.html'; }
+
+    // If already logged in, skip login page
+    (function(){ if(getUser()) window.location.href='home.html'; })();
+  </script>
+</body>
+</html>

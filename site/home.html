@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hassan Pharmacy — Home</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<main>
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1>Your Prescription for<br>Affordable Health Solutions!</h1>
+        <p>Elevate your health journey with exclusive discounts and unparalleled convenience — every purchase is a prescription for savings.</p>
+        <a href="medicines.html" class="btn-primary">Start Shopping →</a>
+      </div>
+      <div class="hero-visual">💊</div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="quick-grid">
+      <div class="quick-card quick-1"><div class="ic">🏷️</div> Get 25% Off</div>
+      <div class="quick-card quick-2"><div class="ic">🚚</div> Free Home Delivery</div>
+      <a class="quick-card quick-3" href="doctors.html"><div class="ic">🩺</div> Doctor's Appointment</a>
+      <div class="quick-card quick-4"><div class="ic">📋</div> Health Advice</div>
+    </div>
+
+    <!-- Latest News -->
+    <section class="section">
+      <div class="section-head"><h2>Latest News</h2></div>
+      <div class="news-grid" id="newsGrid"></div>
+    </section>
+
+    <!-- Top Stories -->
+    <section class="section">
+      <div class="section-head"><h2>Top Stories</h2></div>
+      <div class="story-strip" id="storyStrip"></div>
+    </section>
+
+    <!-- All Medicines preview -->
+    <section class="section">
+      <div class="section-head"><h2>All Medicines</h2><a class="view-all" href="medicines.html">View All →</a></div>
+      <div class="prod-grid" id="medPreviewGrid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Popular Products</h2><a class="view-all" href="medicines.html">View All →</a></div>
+      <div class="prod-grid" id="popularGrid"></div>
+    </section>
+
+    <div class="stats-strip">
+      <div class="stat-card st-1"><div class="ic">👥</div><div><b>14K+</b><span>Orders Completed</span></div></div>
+      <div class="stat-card st-2"><div class="ic">🏆</div><div><b>250+</b><span>Won Awards</span></div></div>
+      <div class="stat-card st-3"><div class="ic">😊</div><div><b>8K+</b><span>Happy Customers</span></div></div>
+      <div class="stat-card st-4"><div class="ic">⭐</div><div><b>12K+</b><span>Positive Reviews</span></div></div>
+    </div>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/main.js"></script>
+<script>
+(async function(){
+  renderHeader('home');
+  renderFooter();
+
+  const products = await getProducts();
+  document.getElementById('medPreviewGrid').innerHTML = products.slice(0,4).map(productCard).join('');
+  document.getElementById('popularGrid').innerHTML = products.slice(4,8).map(productCard).join('');
+
+  const news = await getNews();
+  const newsHost = document.getElementById('newsGrid');
+  if(news.length){
+    const [main, ...rest] = news;
+    newsHost.innerHTML = `
+      <div class="news-main">
+        <div class="thumb">📰</div>
+        <div class="body">
+          <h3 style="font-size:17px;margin-bottom:8px">${escapeHtml(main.title)}</h3>
+          <p style="font-size:13.5px;color:var(--gray)">${escapeHtml(main.excerpt)}</p>
+        </div>
+      </div>
+      <div class="news-side">
+        ${rest.slice(0,3).map(n=>`
+          <div class="news-card">
+            <div class="ic">📄</div>
+            <div>
+              <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">${escapeHtml(n.title)}</div>
+              <div style="font-size:12px;color:var(--gray)">${escapeHtml(n.excerpt)}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    newsHost.innerHTML = '<p style="color:var(--gray)">No news posted yet.</p>';
+  }
+
+  const stories = await getStories();
+  document.getElementById('storyStrip').innerHTML = stories.length ? stories.map(s=>`
+    <div class="story-card">
+      <span class="story-tag">${escapeHtml(s.tag||'Health')}</span>
+      <div style="font-weight:700;font-size:13.5px">${escapeHtml(s.title)}</div>
+    </div>`).join('') : '<p style="color:var(--gray)">No top stories yet.</p>';
+})();
+</script>
+</body>
+</html>
