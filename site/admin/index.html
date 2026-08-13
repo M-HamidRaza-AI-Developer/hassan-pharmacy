@@ -31,7 +31,7 @@
       const pass = document.getElementById('adminPassInput').value;
       const ok = await adminLoginAttempt(id, pass);
       if(ok){
-        window.location.href = 'dashboard.html';
+        window.location.href = 'admin/dashboard.html';
       } else {
         const b = document.getElementById('errBox');
         b.textContent = 'Incorrect Admin ID or Password (or backend not reachable).';
