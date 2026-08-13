@@ -24,7 +24,7 @@
   <script src="../assets/js/main.js"></script>
   <script src="../assets/js/admin.js"></script>
   <script>
-    (function(){ if(isAdminLoggedIn()) window.location.href='dashboard.html'; })();
+    (function(){ if(isAdminLoggedIn()) window.location.href = 'admin/dashboard.html'; })();
     async function handleAdminLogin(e){
       e.preventDefault();
       const id = document.getElementById('adminIdInput').value.trim();
