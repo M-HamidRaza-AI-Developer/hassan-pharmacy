@@ -1,6 +1,6 @@
 /* ============ Hassan Pharmacy — shared logic (storefront, backend-connected) ============ */
 
-const API_BASE = 'https://hassan-pharmacy-backend.onrender.com/api'; // <-- apna asal Render URL yahan daalein
+const API_BASE = 'https://hassan-pharmacy.onrender.com/api'; // <-- apna asal Render URL yahan daalein
 
 const CATS = ["Pain Relief","Cold and Flu","Diabetes Care","Digestive Health","First Aid","Skin Care","Child and Baby Care","Heart Health","Eye and Ear Care","Respiratory Health"];
 const ICONS = {"Pain Relief":"💊","Cold and Flu":"🤧","Diabetes Care":"🩸","Digestive Health":"🌿","First Aid":"🩹","Skin Care":"🧴","Child and Baby Care":"🍼","Heart Health":"❤️","Eye and Ear Care":"👁️","Respiratory Health":"😷"};
